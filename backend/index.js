@@ -5,8 +5,6 @@ import { Book } from "./models/bookModel.js";
 
 const app = express();
 
-// Middleware for parsing request body 
-// app.use(express.json());
 // Middleware to parse JSON
 app.use(express.json());
 app.get('/', (request,response) => {
@@ -63,6 +61,50 @@ app.get('/books/:id', async (request, response) => {
         const book = await Book.findById(id);
 
         return response.status(200).json(book);
+    }
+    catch (error) {
+        console.log(error.message);
+        response.status(500).send({ message: error.message });
+    }
+});
+
+// Route forupdate book in database
+app.put('/books/:id', async (request, response) => {
+    try {
+        if (
+            !request.body.title ||
+            !request.body.author ||
+            !request.body.publishYear
+        ) {
+            return response.status(400).send({
+                message: "Send all required fields: title, author, publishYear",
+            });
+        }
+
+        const { id } = request.params;
+        const result = await Book.findByIdAndUpdate(id, request.body, { new: true });
+
+        if (!result) {
+            return response.status(404).json({ message: "Book not found" });
+        }
+        return response.status(200).send({ message: 'Book Updated Successfully' });
+    }
+    catch (error) {
+        console.log(error.message);
+        response.status(500).send({ message: error.message });
+    }
+});
+
+// Route for Delete one Book from database
+app.delete('/books/:id', async (request, response) => {
+    try {
+        const { id } = request.params;
+        const result = await Book.findByIdAndDelete(id);
+
+        if (!result) {
+            return response.status(404).json({ message: "Book not found" });
+        }
+        return response.status(200).send({ message: 'Book Deleted Successfully' });
     }
     catch (error) {
         console.log(error.message);
